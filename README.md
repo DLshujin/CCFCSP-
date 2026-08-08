@@ -25,7 +25,7 @@
 ## 📂 全书结构
 
 ```
-CCFCSP-/
+CSP-S-From-Zero/
 ├── README.md                  # 项目介绍（本文件）
 ├── 00_全书目录.md              # 带链接的总目录
 ├── 00_全书思维导图.html        # 知识体系可视化思维导图
@@ -102,7 +102,7 @@ CCFCSP-/
 
 ## 🤝 贡献与反馈
 
-- 发现错误或有建议？请[提交 Issue](https://github.com/DLshujin/CCFCSP-/issues)
+- 发现错误或有建议？请[提交 Issue](https://github.com/DLshujin/CSP-S-From-Zero/issues)
 - 欢迎 Fork 后提交 PR 修正内容
 - 觉得有用？Star ⭐ 支持一下
 

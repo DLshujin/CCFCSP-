@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从零基础到CSP-S一等奖 · 电子书</title>
+<style>
+:root {
+    --sidebar-w: 320px;
+    --glass-bg: rgba(255,255,255,0.72);
+    --glass-border: rgba(255,255,255,0.55);
+    --glass-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    --primary: #1a73e8;
+    --primary-light: #e8f0fe;
+    --text: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --bg: #f0f2f5;
+    --bg-content: #ffffff;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font: 'Inter', 'PingFang SC', -apple-system, 'Microsoft YaHei', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace;
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--font);
+    background: linear-gradient(135deg, #e8ecf1 0%, #f0f2f5 30%, #e2e6ec 70%, #f0f2f5 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* ==== 侧边栏 ==== */
+#sidebar {
+    width: var(--sidebar-w);
+    height: 100vh;
+    position: fixed;
+    left: 0; top: 0;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-right: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    display: flex; flex-direction: column;
+    z-index: 100;
+    transition: transform var(--transition);
+    overflow: hidden;
+}
+
+#sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    flex-shrink: 0;
+}
+#sidebar-header .book-icon {
+    font-size: 36px; display: block; margin-bottom: 6px;
+}
+#sidebar-header h1 {
+    font-size: 17px; font-weight: 700; color: var(--text);
+    line-height: 1.4;
+}
+#sidebar-header .subtitle {
+    font-size: 12px; color: var(--text-muted); margin-top: 2px;
+}
+
+/* 进度条 */
+#progress-area {
+    padding: 12px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);
+    flex-shrink: 0;
+}
+#progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;
+}
+#progress-track {
+    height: 6px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden;
+}
+#progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--primary), #4285f4);
+    border-radius: 3px; transition: width 0.5s ease;
+}
+
+/* 搜索框 */
+#search-wrap {
+    padding: 12px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);
+    flex-shrink: 0; position: relative;
+}
+#search-wrap .search-icon {
+    position: absolute; left: 32px; top: 50%; transform: translateY(-50%);
+    font-size: 14px; color: var(--text-muted); pointer-events: none;
+}
+#searchBox {
+    width: 100%; padding: 9px 12px 9px 34px;
+    border: 1px solid rgba(0,0,0,0.1); border-radius: 22px;
+    font-size: 13px; font-family: var(--font);
+    background: rgba(255,255,255,0.6);
+    outline: none; transition: all var(--transition);
+}
+#searchBox:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+    background: #fff;
+}
+
+/* 目录列表 */
+#toc-scroll {
+    flex: 1; overflow-y: auto; padding: 8px 0;
+    scroll-behavior: smooth;
+}
+#toc-scroll::-webkit-scrollbar { width: 4px; }
+#toc-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+
+/* 卷分组 */
+.vol-group { margin-bottom: 2px; }
+.vol-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: var(--text-secondary);
+    transition: background var(--transition);
+    user-select: none;
+}
+.vol-header:hover { background: rgba(0,0,0,0.03); }
+.vol-header .vol-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.vol-header .vol-arrow {
+    font-size: 10px; transition: transform var(--transition);
+    margin-left: auto; color: var(--text-muted);
+}
+.vol-header.collapsed .vol-arrow { transform: rotate(-90deg); }
+.vol-chapters { overflow: hidden; transition: max-height 0.35s ease; }
+.vol-chapters.collapsed { max-height: 0 !important; }
+
+/* 章节项 */
+.chapter-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 20px 8px 36px;
+    font-size: 13.5px; color: var(--text);
+    text-decoration: none; cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all var(--transition);
+    position: relative;
+}
+.chapter-link:hover { background: #f0f7ff; color: var(--primary); }
+.chapter-link.active {
+    background: var(--primary-light); color: var(--primary);
+    border-left-color: var(--primary); font-weight: 600;
+}
+.chapter-link.read .ch-check { opacity: 1; }
+.chapter-link.disabled {
+    color: var(--text-muted); cursor: not-allowed; pointer-events: none;
+}
+.chapter-link .ch-num {
+    font-size: 11px; color: var(--text-muted); min-width: 28px; font-weight: 500;
+}
+.chapter-link .ch-title { flex: 1; }
+.chapter-link .ch-check {
+    font-size: 12px; opacity: 0; transition: opacity var(--transition);
+}
+.chapter-link .ch-badge {
+    font-size: 10px; background: #f0f0f0; color: #999;
+    padding: 1px 6px; border-radius: 10px; white-space: nowrap;
+}
+.chapter-link mark { background: #ffe58f; color: inherit; padding: 0 2px; border-radius: 2px; }
+
+/* 汉堡菜单按钮 */
+#menu-toggle {
+    display: none; position: fixed; top: 12px; left: 12px;
+    z-index: 200; width: 40px; height: 40px;
+    border: none; border-radius: 10px;
+    background: var(--glass-bg); backdrop-filter: blur(20px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    font-size: 20px; cursor: pointer; color: var(--text);
+    align-items: center; justify-content: center;
+}
+#sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35); z-index: 99;
+}
+
+/* ==== 内容区 ==== */
+#content-wrap {
+    margin-left: var(--sidebar-w);
+    flex: 1; min-height: 100vh;
+    padding: 24px;
+    display: flex; flex-direction: column;
+}
+#content {
+    flex: 1;
+    background: var(--bg-content);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    padding: 40px 56px 60px;
+    max-width: 900px;
+    width: 100%;
+    font-size: 16px;
+    line-height: 1.85;
+    color: #374151;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* 导航条 */
+#nav-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 0 16px; max-width: 900px; width: 100%;
+    gap: 12px;
+}
+#nav-bar .nav-title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nav-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 22px; background: #fff; font-size: 13px;
+    cursor: pointer; color: var(--text); transition: all var(--transition);
+    white-space: nowrap; font-family: var(--font);
+}
+.nav-btn:hover { border-color: var(--primary); color: var(--primary); background: #f8faff; }
+.nav-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* 内容排版 */
+#content h1 { font-size: 30px; font-weight: 800; margin: 0 0 20px; color: #111827; padding-bottom: 14px; border-bottom: 3px solid; border-image: linear-gradient(90deg, var(--primary), #4285f4, transparent) 1; }
+#content h2 { font-size: 24px; font-weight: 700; margin: 36px 0 14px; color: #1f2937; padding-left: 14px; border-left: 4px solid var(--primary); }
+#content h3 { font-size: 20px; font-weight: 700; margin: 28px 0 10px; color: #374151; }
+#content h4 { font-size: 17px; font-weight: 600; margin: 20px 0 8px; color: #4b5563; }
+#content p { margin: 12px 0; }
+#content ul, #content ol { margin: 10px 0 10px 24px; }
+#content li { margin: 4px 0; }
+#content a { color: var(--primary); text-decoration: none; }
+#content a:hover { text-decoration: underline; }
+#content strong { font-weight: 700; color: #111827; }
+#content hr { border: none; border-top: 1px solid #e5e7eb; margin: 28px 0; }
+#content img { max-width: 100%; border-radius: 8px; }
+
+/* 代码块 */
+#content pre {
+    position: relative;
+    background: #282c34; color: #abb2bf;
+    padding: 20px; border-radius: 10px;
+    overflow-x: auto; margin: 16px 0;
+    font-family: var(--font-mono); font-size: 14px; line-height: 1.65;
+}
+#content pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+#content code {
+    background: #f3f4f6; color: #e11d48;
+    padding: 2px 7px; border-radius: 5px;
+    font-family: var(--font-mono); font-size: 0.9em;
+}
+#content pre code { color: #abb2bf; padding: 0; background: none; }
+#content pre .lang-tag {
+    position: absolute; top: 8px; right: 56px;
+    font-size: 11px; color: #5c6370; font-family: var(--font-mono);
+    text-transform: uppercase;
+}
+#content pre .copy-btn {
+    position: absolute; top: 8px; right: 12px;
+    width: 32px; height: 32px; border: none; border-radius: 6px;
+    background: rgba(255,255,255,0.08); color: #abb2bf;
+    cursor: pointer; font-size: 14px; transition: all var(--transition);
+    display: flex; align-items: center; justify-content: center;
+}
+#content pre .copy-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+#content pre .copy-btn.copied { background: #22c55e; color: #fff; }
+
+/* 表格 */
+#content table {
+    border-collapse: separate; border-spacing: 0;
+    width: 100%; margin: 16px 0; border-radius: 10px;
+    overflow: hidden; border: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+#content th {
+    background: #f8fafc; font-weight: 700; color: #374151;
+    padding: 10px 14px; text-align: left; border-bottom: 2px solid #e5e7eb;
+}
+#content td { padding: 9px 14px; border-bottom: 1px solid #f3f4f6; }
+#content tr:last-child td { border-bottom: none; }
+#content tr:nth-child(even) td { background: #fafbfc; }
+
+/* 引用块 */
+#content blockquote {
+    border-left: 4px solid var(--primary);
+    background: #f0f7ff; padding: 14px 20px;
+    margin: 16px 0; border-radius: 0 8px 8px 0;
+    color: #374151;
+}
+#content blockquote p { margin: 6px 0; }
+
+/* emoji 提示框样式 */
+#content blockquote.bq-tip {
+    border-left-color: #52c41a; background: #f6ffed;
+}
+#content blockquote.bq-warning {
+    border-left-color: #fa8c16; background: #fff7e6;
+}
+#content blockquote.bq-note {
+    border-left-color: #722ed1; background: #f9f0ff;
+}
+#content blockquote.bq-info {
+    border-left-color: #1890ff; background: #e6f7ff;
+}
+
+/* 提示框 */
+.admonition {
+    padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+    border-left: 4px solid; line-height: 1.75;
+}
+.admonition p:first-child { margin-top: 0; }
+.admonition p:last-child { margin-bottom: 0; }
+.admonition-title { font-weight: 700; margin-bottom: 4px; }
+.admonition.info { background: #e6f7ff; border-left-color: #1890ff; }
+.admonition.info .admonition-title { color: #096dd9; }
+.admonition.warning { background: #fff7e6; border-left-color: #fa8c16; }
+.admonition.warning .admonition-title { color: #d46b08; }
+.admonition.tip { background: #f6ffed; border-left-color: #52c41a; }
+.admonition.tip .admonition-title { color: #389e0d; }
+.admonition.abstract { background: #f9f0ff; border-left-color: #722ed1; }
+.admonition.abstract .admonition-title { color: #531dab; }
+
+/* 返回顶部 */
+#topBtn {
+    position: fixed; bottom: 32px; right: 32px;
+    width: 44px; height: 44px; border: none;
+    border-radius: 50%; background: var(--primary); color: #fff;
+    font-size: 20px; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(26,115,232,0.35);
+    opacity: 0; transform: translateY(20px);
+    transition: all var(--transition);
+    z-index: 80; pointer-events: none;
+}
+#topBtn.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#topBtn:hover { background: #1557b0; transform: translateY(-2px); }
+
+/* 响应式 */
+@media (max-width: 1024px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #menu-toggle { display: flex; }
+    #sidebar-overlay { display: block; }
+    #content-wrap { margin-left: 0; }
+    #content { padding: 28px 24px 50px; border-radius: 12px; }
+}
+@media (max-width: 768px) {
+    #content { padding: 20px 16px 40px; font-size: 15px; }
+    #content h1 { font-size: 24px; }
+    #content h2 { font-size: 20px; }
+    #content pre { padding: 14px; font-size: 13px; }
+    #nav-bar { flex-wrap: wrap; }
+}
+
+/* 隐藏 */
+.hidden { display: none !important; }
+</style>
+<!-- Mermaid 图表渲染 -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<!-- 汉堡菜单 -->
+<button id="menu-toggle" onclick="toggleSidebar()" aria-label="菜单">☰</button>
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- 侧边栏 -->
+<aside id="sidebar">
+    <div id="sidebar-header">
+        <span class="book-icon">📚</span>
+        <h1>从零基础到CSP-S一等奖</h1>
+        <div class="subtitle">58章 + 附录 · 八大板块</div>
+    </div>
+
+    <div id="progress-area">
+        <div id="progress-label"><span>阅读进度</span><span id="progress-percent">0%</span></div>
+        <div id="progress-track"><div id="progress-fill"></div></div>
+    </div>
+
+    <div id="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input id="searchBox" type="text" placeholder="搜索章节..." autocomplete="off">
+    </div>
+
+    <nav id="toc-scroll"></nav>
+</aside>
+
+<!-- 内容区 -->
+<div id="content-wrap">
+    <div id="nav-bar">
+        <button class="nav-btn" id="btn-prev" disabled onclick="navigateChapter(-1)">← 上一章</button>
+        <span class="nav-title" id="nav-title">📚 欢迎阅读</span>
+        <button class="nav-btn" id="btn-next" disabled onclick="navigateChapter(1)">下一章 →</button>
+    </div>
+    <main id="content">
+        <h1>📚 从零基础到CSP-S一等奖</h1>
+        <p style="font-size:18px;color:#6b7280;">全书58章 + 附录 · 八大板块 · 全面覆盖CSP-S考纲（含2025修订版）</p>
+        <hr>
+        <h2>📖 本书概览</h2>
+        <table>
+            <tr><th>板块</th><th>章节范围</th><th>章数</th><th>核心内容</th></tr>
+            <tr><td>第一卷：C++语法基础</td><td>01～09</td><td>9</td><td>变量、分支循环、数组、字符串、函数递归、结构体、指针引用</td></tr>
+            <tr><td>第二卷：基础算法</td><td>10～17</td><td>8</td><td>复杂度、枚举模拟、排序、二分、前缀和差分、双指针、进制转换与补码</td></tr>
+            <tr><td>第三卷：数据结构</td><td>18～26</td><td>9</td><td>栈、队列、链表、哈希表、堆、并查集、Trie/KMP、二叉树、图</td></tr>
+            <tr><td>第四卷：搜索与图论进阶</td><td>27～34</td><td>8</td><td>DFS/BFS进阶、拓扑排序、最短路三件套、最小生成树、二分图</td></tr>
+            <tr><td>第五卷：数学知识</td><td>35～40</td><td>6</td><td>质数约数、欧拉函数、exgcd/CRT、组合容斥、高斯消元、博弈论SG函数</td></tr>
+            <tr><td>第六卷：动态规划</td><td>41～47</td><td>7</td><td>DP入门、背包、线性（含多维DP）、区间、树形、状压、计数/数位</td></tr>
+            <tr><td>第七卷：贪心与实战冲刺</td><td>48～50</td><td>3</td><td>贪心进阶、初赛专项（含Linux/g++）、复赛真题精讲</td></tr>
+            <tr><td>第八卷：考纲补强专题</td><td>51～58</td><td>8</td><td>树状数组、线段树、SCC、差分约束、Manacher、扫描线、单调栈队列、STL/bitset、概率期望DP、平衡树</td></tr>
+        </table>
+        <hr>
+        <blockquote>
+            <p>📌 <strong>当前进度：</strong>全部58章 + 2附录已完成，全面覆盖CSP-S 2025考纲。</p>
+        </blockquote>
+        <blockquote>
+            <p>🎯 <strong>学习目标：</strong>系统掌握CSP-S全部考纲知识点，冲刺一等奖。</p>
+        </blockquote>
+        <blockquote>
+            <p>💡 <strong>快捷键提示：</strong>使用 <code>←</code> <code>→</code> 切换章节，<code>/</code> 聚焦搜索，<code>Esc</code> 清空搜索。</p>
+        </blockquote>
+        <blockquote>
+            <p>⚠️ <strong>阅读建议：</strong>建议按顺序学习第一至第五卷，第六卷DP需前置知识扎实后再进入。每章的"📌学习目标"和"📖本章总结"是复习重点。</p>
+        </blockquote>
+        <p style="text-align:center;margin-top:32px;font-size:15px;color:#9ca3af;">点击左侧目录开始学习 👈</p>
+    </main>
+</div>
+
+<button id="topBtn" onclick="document.getElementById('content').scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- marked.js -->
+<script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+<!-- highlight.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<!-- KaTeX 数学公式 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
+
+<script>
+// ====== 章节数据 ======
+const volumes = [
+    { name:'第一卷：C++语法基础', range:'01-09', color:'#4A90D9', chs:[
+        ['01','初识编程与HelloWorld','第01章_初识编程与HelloWorld.md'],
+        ['02','变量与数据类型','第02章_变量与数据类型.md'],
+        ['03','输入输出与基本运算','第03章_输入输出与基本运算.md'],
+        ['04','分支结构','第04章_分支结构.md'],
+        ['05','循环结构','第05章_循环结构.md'],
+        ['06','数组','第06章_数组.md'],
+        ['07','字符串','第07章_字符串.md'],
+        ['08','函数与递归入门','第08章_函数与递归入门.md'],
+        ['09','结构体与文件操作','第09章_结构体与文件操作.md']
+    ]},
+    { name:'第二卷：基础算法', range:'10-17', color:'#52C41A', chs:[
+        ['10','算法效率与时间复杂度','第10章_算法效率与时间复杂度.md'],
+        ['11','枚举与模拟算法','第11章_枚举与模拟算法.md'],
+        ['12','排序算法','第12章_排序算法.md'],
+        ['13','二分查找','第13章_二分查找.md'],
+        ['14','前缀和与差分','第14章_前缀和与差分.md'],
+        ['15','双指针算法','第15章_双指针算法.md'],
+        ['16','位运算与离散化','第16章_位运算与离散化.md'],
+        ['17','区间合并与贪心初步','第17章_区间合并与贪心初步.md']
+    ]},
+    { name:'第三卷：数据结构', range:'18-26', color:'#FA8C16', chs:[
+        ['18','栈','第18章_栈.md'],
+        ['19','队列','第19章_队列.md'],
+        ['20','链表','第20章_链表.md'],
+        ['21','哈希表','第21章_哈希表.md'],
+        ['22','堆与优先队列','第22章_堆.md'],
+        ['23','并查集','第23章_并查集.md'],
+        ['24','Trie树与KMP','第24章_Trie树与KMP.md'],
+        ['25','二叉树','第25章_二叉树.md'],
+        ['26','图的存储与遍历','第26章_图的存储与遍历.md'],
+        ['A','专题A STL标准模板库','专题A_STL标准模板库.md']
+    ]},
+    { name:'第四卷：搜索与图论进阶', range:'27-34', color:'#722ED1', chs:[
+        ['27','DFS进阶与剪枝','第27章_DFS进阶与剪枝.md'],
+        ['28','BFS进阶与双向BFS','第28章_BFS进阶与双向BFS.md'],
+        ['29','拓扑排序','第29章_拓扑排序.md'],
+        ['30','最短路I：Dijkstra','第30章_最短路I_Dijkstra.md'],
+        ['31','最短路II：Bellman-Ford & SPFA','第31章_最短路II_BellmanFord_SPFA.md'],
+        ['32','最短路III：Floyd','第32章_最短路III_Floyd.md'],
+        ['33','最小生成树','第33章_最小生成树.md'],
+        ['34','二分图与匈牙利算法','第34章_二分图与匈牙利算法.md']
+    ]},
+    { name:'第五卷：数学知识', range:'35-40', color:'#F5222D', chs:[
+        ['35','质数与约数','第35章_质数与约数.md'],
+        ['36','欧拉函数与快速幂','第36章_欧拉函数与快速幂.md'],
+        ['37','扩展欧几里得与中国剩余定理','第37章_扩展欧几里得与中国剩余定理.md'],
+        ['38','组合数与容斥原理','第38章_组合数与容斥原理.md'],
+        ['39','高斯消元','第39章_高斯消元.md'],
+        ['40','博弈论初步','第40章_博弈论初步.md']
+    ]},
+    { name:'第六卷：动态规划', range:'41-47', color:'#13C2C2', chs:[
+        ['41','DP入门：概念与记忆化搜索','第41章_DP入门_概念与记忆化搜索.md'],
+        ['42','背包DP','第42章_背包DP.md'],
+        ['43','线性DP','第43章_线性DP.md'],
+        ['44','区间DP','第44章_区间DP.md'],
+        ['45','树形DP','第45章_树形DP.md'],
+        ['46','状态压缩DP','第46章_状态压缩DP.md'],
+        ['47','计数类DP与数位统计DP','第47章_计数类DP与数位统计DP.md']
+    ]},
+    { name:'第七卷：贪心与实战冲刺', range:'48-50', color:'#EB2F96', chs:[
+        ['48','贪心算法进阶','第48章_贪心算法进阶.md'],
+        ['49','初赛题型专项训练','第49章_初赛题型专项训练.md'],
+        ['50','复赛真题精讲与考试策略','第50章_复赛真题精讲与考试策略.md']
+    ]},
+    { name:'第八卷：考纲补强专题', range:'51-58', color:'#1890ff', chs:[
+        ['51','树状数组','第51章_树状数组.md'],
+        ['52','线段树','第52章_线段树.md'],
+        ['53','强连通分量与差分约束','第53章_强连通分量与差分约束.md'],
+        ['54','Manacher算法与扫描线','第54章_Manacher算法与扫描线.md'],
+        ['55','单调栈与单调队列','第55章_单调栈与单调队列.md'],
+        ['56','STL进阶、bitset与类基础','第56章_STL进阶_bitset与类基础.md'],
+        ['57','概率与期望DP','第57章_概率与期望DP.md'],
+        ['58','平衡树基础概念','第58章_平衡树基础概念.md']
+    ]},
+    { name:'附录', range:'补充', color:'#8c8c8c', chs:[
+        ['附','CSP-J/S考纲速查手册','附录_CSP-JS考纲速查手册.md'],
+        ['附','调试技巧与对拍','附录_调试技巧与对拍.md']
+    ]}
+];
+
+// 构建扁平章节列表
+const allChapters = [];
+volumes.forEach(v => { v.chs.forEach(ch => { allChapters.push({...ch, vol:v}); }); });
+
+// ====== 阅读进度 ======
+const STORAGE_KEY = 'csps_reading_progress';
+const STORAGE_READ = 'csps_read_chapters';
+
+function getReadChapters() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_READ) || '[]'); }
+    catch(e) { return []; }
+}
+function markRead(filename) {
+    const read = getReadChapters();
+    if (!read.includes(filename)) { read.push(filename); localStorage.setItem(STORAGE_READ, JSON.stringify(read)); }
+    updateProgressUI();
+    updateReadMarks();
+}
+function updateReadMarks() {
+    const read = getReadChapters();
+    document.querySelectorAll('.chapter-link').forEach(a => {
+        const fn = a.dataset.file;
+        if (read.includes(fn)) a.classList.add('read');
+        else a.classList.remove('read');
+    });
+}
+function updateProgressUI() {
+    const read = getReadChapters();
+    const total = allChapters.length;
+    const pct = total > 0 ? Math.round(read.length / total * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-percent').textContent = pct + '% (' + read.length + '/' + total + ')';
+}
+
+// ====== 构建目录 ======
+function buildTOC() {
+    const toc = document.getElementById('toc-scroll');
+    toc.innerHTML = '';
+    volumes.forEach((vol, vi) => {
+        const group = document.createElement('div');
+        group.className = 'vol-group';
+
+        const header = document.createElement('div');
+        header.className = 'vol-header';
+        header.innerHTML = `<span class="vol-dot" style="background:${vol.color}"></span>${vol.name} <small style="color:#9ca3af;font-weight:400;">(${vol.range}章)</small><span class="vol-arrow">▼</span>`;
+        header.onclick = function() {
+            const chs = this.nextElementSibling;
+            const isCollapsed = chs.classList.toggle('collapsed');
+            this.classList.toggle('collapsed', isCollapsed);
+        };
+
+        const chsDiv = document.createElement('div');
+        chsDiv.className = 'vol-chapters';
+        chsDiv.style.maxHeight = (vol.chs.length * 44) + 'px';
+
+        vol.chs.forEach(ch => {
+            const a = document.createElement('a');
+            a.className = 'chapter-link';
+            a.dataset.file = ch[2];
+            a.dataset.num = ch[0];
+            a.innerHTML = `<span class="ch-num">${ch[0]}</span><span class="ch-title">${ch[1]}</span><span class="ch-check">✅</span>`;
+            a.href = '#';
+            a.onclick = function(e) { e.preventDefault(); loadChapter(ch[2], this); };
+            chsDiv.appendChild(a);
+        });
+
+        group.appendChild(header);
+        group.appendChild(chsDiv);
+        toc.appendChild(group);
+    });
+}
+
+// ====== 导航 ======
+let currentFile = null;
+let currentLink = null;
+
+function navigateChapter(dir) {
+    const idx = allChapters.findIndex(ch => ch[2] === currentFile);
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= allChapters.length) return;
+    const ch = allChapters[newIdx];
+    const link = document.querySelector(`.chapter-link[data-file="${ch[2]}"]`);
+    loadChapter(ch[2], link);
+}
+
+function updateNavButtons() {
+    const idx = allChapters.findIndex(ch => ch[2] === currentFile);
+    document.getElementById('btn-prev').disabled = (idx <= 0);
+    document.getElementById('btn-next').disabled = (idx >= allChapters.length - 1);
+    document.getElementById('nav-title').textContent = currentFile
+        ? allChapters[idx][1] : '📚 欢迎阅读';
+}
+
+// ====== 加载章节 ======
+function loadChapter(filename, linkEl) {
+    fetch(filename)
+        .then(res => { if (!res.ok) throw new Error('404'); return res.text(); })
+        .then(text => {
+            const html = renderMarkdown(text);
+            const contentEl = document.getElementById('content');
+            contentEl.innerHTML = html;
+            postRender(contentEl);
+            currentFile = filename;
+
+            // 高亮当前章节
+            document.querySelectorAll('.chapter-link').forEach(a => a.classList.remove('active'));
+            if (linkEl) { linkEl.classList.add('active'); linkEl.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+            else {
+                const a = document.querySelector(`.chapter-link[data-file="${filename}"]`);
+                if (a) { a.classList.add('active'); a.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+            }
+            currentLink = linkEl;
+
+            markRead(filename);
+            updateNavButtons();
+            contentEl.scrollTop = 0;
+            // 保存最后阅读章节
+            localStorage.setItem(STORAGE_KEY, filename);
+        })
+        .catch(() => {
+            document.getElementById('content').innerHTML = `
+                <h1>⚠️ 章节加载失败</h1>
+                <p>找不到文件：<code>${filename}</code></p>
+                <p>请检查文件是否存在于同一目录下。</p>`;
+            updateNavButtons();
+        });
+}
+
+// ====== Markdown 渲染 ======
+marked.setOptions({ gfm: true, breaks: false, headerIds: false, mangle: false });
+
+function preprocessAdmonitions(text) {
+    const lines = text.split('\n');
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+        const m = lines[i].match(/^!!!\s+(\w+)(?:\s+"([^"]*)")?\s*$/);
+        if (m) {
+            const type = m[1], title = m[2] || '';
+            i++;
+            const content = [];
+            while (i < lines.length) {
+                const line = lines[i];
+                if (line === '') { content.push(''); i++; continue; }
+                if (/^[ \t]+/.test(line)) { content.push(line.replace(/^[ \t]+/, '')); i++; }
+                else break;
+            }
+            while (content.length && content[content.length-1] === '') content.pop();
+            const inner = marked.parse(content.join('\n'));
+            const titleHtml = title ? `<div class="admonition-title">${title}</div>` : '';
+            out.push(`<div class="admonition ${type}">${titleHtml}${inner}</div>`);
+        } else { out.push(lines[i]); i++; }
+    }
+    return out.join('\n');
+}
+
+function renderMarkdown(text) {
+    return marked.parse(preprocessAdmonitions(text));
+}
+
+function postRender(contentEl) {
+    // 代码块处理：添加语言标签和复制按钮
+    contentEl.querySelectorAll('pre').forEach(pre => {
+        const code = pre.querySelector('code');
+        if (!code) return;
+
+        // 语言标签
+        const cls = code.className || '';
+        const langMatch = cls.match(/language-(\w+)/);
+        const lang = langMatch ? langMatch[1] : 'cpp';
+        let tag = pre.querySelector('.lang-tag');
+        if (!tag) { tag = document.createElement('span'); tag.className = 'lang-tag'; pre.appendChild(tag); }
+        tag.textContent = lang;
+
+        // 复制按钮
+        let btn = pre.querySelector('.copy-btn');
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.innerHTML = '📋';
+            btn.title = '复制代码';
+            pre.appendChild(btn);
+        }
+        btn.onclick = function() {
+            navigator.clipboard.writeText(code.textContent).then(() => {
+                btn.innerHTML = '✓'; btn.classList.add('copied');
+                setTimeout(() => { btn.innerHTML = '📋'; btn.classList.remove('copied'); }, 2000);
+            });
+        };
+
+        // highlight.js
+        if (window.hljs) {
+            try { hljs.highlightElement(code); }
+            catch(e) { /* fallback */ }
+        }
+    });
+
+    // emoji 提示框：检测 > 💡 / > ⚠️ / > 📌 / > 💡 等开头的引用块
+    contentEl.querySelectorAll('blockquote').forEach(bq => {
+        const firstP = bq.querySelector('p');
+        if (!firstP) return;
+        const text = firstP.textContent.trim();
+        if (text.startsWith('💡')) bq.classList.add('bq-tip');
+        else if (text.startsWith('⚠️')) bq.classList.add('bq-warning');
+        else if (text.startsWith('📌')) bq.classList.add('bq-note');
+        else if (text.startsWith('💡') || text.startsWith('✅')) bq.classList.add('bq-tip');
+    });
+
+    // 表格添加 wrapper（用于移动端滚动）
+    contentEl.querySelectorAll('table').forEach(t => {
+        if (!t.parentElement.classList.contains('table-wrap')) {
+            // 不做 wrapper，直接美化
+        }
+    });
+
+    // 渲染数学公式（KaTeX auto-render）
+    if (window.renderMathInElement) {
+        try {
+            renderMathInElement(contentEl, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false
+            });
+        } catch (e) {}
+    }
+
+    // 将 mermaid 代码块转换为可渲染的 div
+    contentEl.querySelectorAll('pre code.language-mermaid').forEach(el => {
+        const code = el.textContent;
+        const div = document.createElement('div');
+        div.className = 'mermaid';
+        div.textContent = code;
+        el.parentElement.replaceWith(div);
+    });
+
+    // 渲染 Mermaid 图表
+    if (window.mermaid) {
+        mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        document.querySelectorAll('.mermaid').forEach(el => {
+            mermaid.run({ nodes: [el] });
+        });
+    }
+}
+
+// ====== 搜索 ======
+document.getElementById('searchBox').addEventListener('input', function() {
+    const kw = this.value.trim().toLowerCase();
+    const links = document.querySelectorAll('.chapter-link');
+    const groups = document.querySelectorAll('.vol-group');
+
+    // 清除高亮
+    links.forEach(a => { a.querySelector('.ch-title').innerHTML = a.querySelector('.ch-title').textContent; });
+
+    if (!kw) {
+        links.forEach(a => a.classList.remove('hidden'));
+        groups.forEach(g => g.classList.remove('hidden'));
+        return;
+    }
+
+    groups.forEach(g => { let has = false;
+        g.querySelectorAll('.chapter-link').forEach(a => {
+            const title = a.querySelector('.ch-title').textContent.toLowerCase();
+            const num = a.dataset.num;
+            if (title.includes(kw) || num.includes(kw)) {
+                a.classList.remove('hidden'); has = true;
+                // 高亮
+                const titleEl = a.querySelector('.ch-title');
+                const orig = titleEl.textContent;
+                const re = new RegExp('(' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                titleEl.innerHTML = orig.replace(re, '<mark>$1</mark>');
+            } else { a.classList.add('hidden'); }
+        });
+        g.classList.toggle('hidden', !has);
+    });
+});
+
+// ====== 侧边栏切换 ======
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('hidden');
+}
+
+// ====== 返回顶部 ======
+const contentEl = document.getElementById('content');
+contentEl.addEventListener('scroll', function() {
+    const btn = document.getElementById('topBtn');
+    if (contentEl.scrollTop > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+});
+
+// ====== 键盘快捷键 ======
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        if (e.key === 'Escape') { e.target.blur(); document.getElementById('searchBox').value = ''; document.getElementById('searchBox').dispatchEvent(new Event('input')); }
+        return;
+    }
+    switch(e.key) {
+        case 'ArrowLeft': e.preventDefault(); navigateChapter(-1); break;
+        case 'ArrowRight': e.preventDefault(); navigateChapter(1); break;
+        case '/': e.preventDefault(); document.getElementById('searchBox').focus(); break;
+        case 'Escape': document.getElementById('searchBox').value = ''; document.getElementById('searchBox').dispatchEvent(new Event('input')); break;
+    }
+});
+
+// ====== 初始化 ======
+buildTOC();
+updateProgressUI();
+updateReadMarks();
+
+// 恢复上次阅读位置
+const lastRead = localStorage.getItem(STORAGE_KEY);
+if (lastRead) {
+    const link = document.querySelector(`.chapter-link[data-file="${lastRead}"]`);
+    if (link) loadChapter(lastRead, link);
+    else {
+        // 加载默认首页（00_全书目录）
+        fetch('00_全书目录.md').then(r => r.ok ? r.text() : Promise.reject()).then(t => {
+            document.getElementById('content').innerHTML = renderMarkdown(t);
+            postRender(document.getElementById('content'));
+        }).catch(() => {});
+    }
+} else {
+    fetch('00_全书目录.md').then(r => r.ok ? r.text() : Promise.reject()).then(t => {
+        document.getElementById('content').innerHTML = renderMarkdown(t);
+        postRender(document.getElementById('content'));
+    }).catch(() => {});
+}
+</script>
+</body>
+</html>
